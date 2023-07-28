@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,12 +12,22 @@ import (
 )
 
 type PollData struct {
-	PollSource string
-	Approve    string
-	Disapprove string
+	PollSource string `json:"poll_source"`
+	Approve    string `json:"approve"`
+	Disapprove string `json:"disapprove"`
 }
 
 func main() {
+	var spreadsheetURL string
+
+	flag.StringVar(&spreadsheetURL, "url", "", "URL of the spreadsheet to scrape")
+	flag.Parse()
+
+	if spreadsheetURL == "" {
+		fmt.Println("Error: Please provide the URL of the spreadsheet using the -url flag.")
+		return
+	}
+
 	c := colly.NewCollector()
 	var data []PollData
 
@@ -36,21 +48,19 @@ func main() {
 		}
 	})
 
-	spreadsheetURL := "https://docs.google.com/spreadsheets/d/1Szc6lW9wwq5M0ZnJ2rk7K-Y5SFaCJMMlwKFY9B-hPUg/edit#gid=0"
 	if err := c.Visit(spreadsheetURL); err != nil {
 		log.Fatal(err)
 	}
 
-	csvData := "Poll Source,Approve,Disapprove\n"
-	for _, poll := range data {
-		row := fmt.Sprintf("%s,%s,%s\n", poll.PollSource, poll.Approve, poll.Disapprove)
-		csvData += row
-	}
-
-	err := ioutil.WriteFile("poll_data.csv", []byte(csvData), 0644)
+	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error converting data to JSON:", err)
 	}
 
-	fmt.Println("Let's take a look at this data!")
+	err = ioutil.WriteFile("poll_data.json", jsonData, 0644)
+	if err != nil {
+		log.Fatal("Error writing JSON data to file:", err)
+	}
+
+	fmt.Println("Data scraped successfully and saved in poll_data.json!")
 }

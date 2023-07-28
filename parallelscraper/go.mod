@@ -1,4 +1,4 @@
-module github.com/jcduff00/ParallelScraper
+module github.com/jcduff00/ParallelScrape
 
 go 1.20
 require github.com/gocolly/colly v1.2.0
