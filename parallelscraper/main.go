@@ -36,10 +36,9 @@ func main() {
 	c := colly.NewCollector()
 	var data []PollData
 
-	// Extract the poll data from the table
 	c.OnHTML(".wikitable tbody tr", func(e *colly.HTMLElement) {
 		if e.Index == 0 {
-			return // Skip the header row
+			return
 		}
 
 		source := strings.TrimSpace(e.ChildText("td:nth-child(1)"))
@@ -66,14 +65,12 @@ func main() {
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		// Convert data to JSON format
 		jsonData, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			log.Fatal("Error converting data to JSON:", err)
 		}
 
-		// Write JSON data to a file
-		file, err := os.Create("poll_data.json")
+		file, err := os.Create("data.json")
 		if err != nil {
 			log.Fatal("Error creating JSON file:", err)
 		}
@@ -84,7 +81,7 @@ func main() {
 			log.Fatal("Error writing JSON data to file:", err)
 		}
 
-		fmt.Println("Data scraped successfully and saved in poll_data.json!")
+		fmt.Println("Data scraped successfully and saved in data.json!")
 	})
 
 	if err := c.Visit(url); err != nil {
